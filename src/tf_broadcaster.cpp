@@ -9,41 +9,56 @@
 
 using namespace std::chrono_literals;
 
-/*
- * TODO: Create a Class named 'TFBroadcaster' that inherits from rclcpp::Node.
- * Requirements:
- * 1. The constructor should name the node "tf_broadcaster".
- * 2. Create a TransformBroadcaster.
- * 3. Create a timer that triggers every 100ms.
- * 4. In timer callback:
- *    - Create a TransformStamped message
- *    - Set header.stamp to current time
- *    - Set header.frame_id to "world"
- *    - Set child_frame_id to "robot"
- *    - Calculate circular motion:
- *      x = 2.0 * cos(time_seconds)
- *      y = 2.0 * sin(time_seconds)
- *      z = 0.0
- *    - Set rotation to identity quaternion (0, 0, 0, 1)
- *    - Broadcast the transform
- */
-
 class TFBroadcaster : public rclcpp::Node
 {
 public:
     TFBroadcaster()
-        : Node("tf_broadcaster")
+        : Node("tf_broadcaster"), time_(0.0)
     {
-        // TODO: Create the transform broadcaster here
+        // Create transform broadcaster
+        tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-        // TODO: Create the timer here
+        // Create timer (100ms)
+        timer_ = this->create_wall_timer(
+            100ms,
+            std::bind(&TFBroadcaster::timer_callback, this));
     }
 
 private:
-    // TODO: Define timer_callback function here
+    void timer_callback()
+    {
+        geometry_msgs::msg::TransformStamped transform;
+
+        // Set header
+        transform.header.stamp = this->get_clock()->now();
+        transform.header.frame_id = "world";
+        transform.child_frame_id = "robot";
+
+        // Circular motion
+        double x = 2.0 * std::cos(time_);
+        double y = 2.0 * std::sin(time_);
+        double z = 0.0;
+
+        transform.transform.translation.x = x;
+        transform.transform.translation.y = y;
+        transform.transform.translation.z = z;
+
+        // Identity quaternion (no rotation)
+        transform.transform.rotation.x = 0.0;
+        transform.transform.rotation.y = 0.0;
+        transform.transform.rotation.z = 0.0;
+        transform.transform.rotation.w = 1.0;
+
+        // Broadcast transform
+        tf_broadcaster_->sendTransform(transform);
+
+        // Increase time
+        time_ += 0.1;
+    }
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::TimerBase::SharedPtr timer_;
+    double time_;
 };
 
 int main(int argc, char *argv[])

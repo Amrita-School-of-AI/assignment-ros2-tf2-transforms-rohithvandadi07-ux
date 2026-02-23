@@ -5,16 +5,23 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
-# TODO: Add the executable target named 'tf_broadcaster'
-# 1. Add executable using src/tf_broadcaster.cpp
-# 2. Add dependencies (ament_target_dependencies) for rclcpp, tf2_ros, geometry_msgs
-# 3. Install the target to the DESTINATION lib/${PROJECT_NAME}
+add_executable(tf_broadcaster src/tf_broadcaster.cpp)
+
+ament_target_dependencies(tf_broadcaster
+  rclcpp
+  tf2_ros
+  geometry_msgs
+)
+
+install(TARGETS
+  tf_broadcaster
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
